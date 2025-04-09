@@ -16,6 +16,13 @@ pipeline {
     }
 
     stages {
+
+        stage('Check Docker') {
+            steps {
+                sh 'docker --version'
+            }
+        }
+
         stage('Checkout') {
             steps {
                 echo 'Checking out source code...'

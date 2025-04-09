@@ -1,17 +1,21 @@
+version: '3.8'
+
 services:
   jenkins:
     image: jenkins/jenkins:lts
     container_name: jenkins
-    user: root # Needed to access docker socket
+    user: root # allow access to docker.sock
     ports:
       - "8080:8080"
-      - "50000:50000" # Agent connection port
+      - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock # Give Jenkins access to Docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker # OPTIONAL: host docker CLI
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
     restart: unless-stopped
 
+# ✅ Define the volume properly here
 volumes:
   jenkins_home:
