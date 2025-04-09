@@ -19,7 +19,7 @@ pipeline {
 
         stage('Check Docker') {
             steps {
-                sh 'docker --version'
+                sh 'sudo docker --version'
             }
         }
 
@@ -34,7 +34,7 @@ pipeline {
             steps {
                 echo 'Running unit tests inside Python container...'
                 sh '''
-                    docker run --rm \
+                    sudo docker run --rm \
                         -v "$PWD":/app \
                         -w /app \
                         python:3.11-slim \
