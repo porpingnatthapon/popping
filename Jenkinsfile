@@ -1,29 +1,62 @@
+latestMajorVersionNumber = 0
+latestMinorVersionNumber = 0
+latestPatchVersionNumber = 0
+currentBuild.displayName = "#" + (currentBuild.number)
+currentBuild.description = params.BuildDescription
+def offsetPatchVersion
+node {
+    offsetPatchVersion = currentBuild.number + latestPatchVersionNumber
+}
+
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "my-python-app"
+        VERSION = "${latestMajorVersionNumber}.${latestMinorVersionNumber}.${offsetPatchVersion}"
+    }
+
     stages {
-        stage('Checkout Frontend') {
+        stage('Checkout') {
             steps {
-                echo 'Checking out frontend source code...'
+                echo 'Checking out source code...'
+                checkout scm
             }
         }
 
         stage('Install & Unit Test') {
             steps {
-                echo 'Installing dependencies and running frontend unit tests...'
+                echo 'Installing dependencies and running unit tests...'
+                sh '''
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    python -m unittest discover -s . -p "test_*.py"
+                '''
             }
         }
 
-        stage('Build Frontend') {
+        stage('Build') {
             steps {
-                echo 'Building frontend...'
+                echo "Building Docker image: ${IMAGE_NAME}:${VERSION}"
+                sh '''
+                    docker build -t ${IMAGE_NAME}:${VERSION} .
+                '''
             }
         }
 
-        stage('Trigger Integration Tests') {
+
+        stage('Push to Registry') {
             steps {
-                echo 'Triggering integration pipeline from frontend...'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker tag ${IMAGE_NAME}:${VERSION} ${DOCKER_USER}/${IMAGE_NAME}:${VERSION}
+                        docker push ${DOCKER_USER}/${IMAGE_NAME}:${VERSION}
+                    '''
+                }
             }
         }
+        
     }
 }
