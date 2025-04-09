@@ -1,9 +1,18 @@
+latestMajorVersionNumber = 0
+latestMinorVersionNumber = 0
+latestPatchVersionNumber = 0
+currentBuild.displayName = "#" + (currentBuild.number)
+currentBuild.description = params.BuildDescription
+def offsetPatchVersion
+node {
+    offsetPatchVersion = currentBuild.number + latestPatchVersionNumber
+}
 pipeline {
     agent any
 
     environment {
         IMAGE_NAME = "my-python-app"
-        VERSION = "0.0.${env.BUILD_NUMBER}"
+        VERSION = "${latestMajorVersionNumber}.${latestMinorVersionNumber}.${offsetPatchVersion}"
     }
 
     stages {
