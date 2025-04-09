@@ -9,7 +9,11 @@ node {
 }
 
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.11-slim'
+        }
+    }
 
     environment {
         IMAGE_NAME = "my-python-app"
