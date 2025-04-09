@@ -1,23 +1,9 @@
-latestMajorVersionNumber = 0
-latestMinorVersionNumber = 0
-latestPatchVersionNumber = 0
-currentBuild.displayName = "#" + (currentBuild.number)
-currentBuild.description = params.BuildDescription
-def offsetPatchVersion
-node {
-    offsetPatchVersion = currentBuild.number + latestPatchVersionNumber
-}
-
 pipeline {
-    agent {
-        docker {
-            image 'python:3.11-slim'
-        }
-    }
+    agent any
 
     environment {
         IMAGE_NAME = "my-python-app"
-        VERSION = "${latestMajorVersionNumber}.${latestMinorVersionNumber}.${offsetPatchVersion}"
+        VERSION = "0.0.${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -30,17 +16,18 @@ pipeline {
 
         stage('Install & Unit Test') {
             steps {
-                echo 'Installing dependencies and running unit tests...'
+                echo 'Running unit tests inside Python container...'
                 sh '''
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install --upgrade pip
-                    python -m unittest discover -s . -p "test_*.py"
+                    docker run --rm \
+                        -v "$PWD":/app \
+                        -w /app \
+                        python:3.11-slim \
+                        sh -c "pip install --upgrade pip && python -m unittest discover -s . -p 'test_*.py'"
                 '''
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
                 echo "Building Docker image: ${IMAGE_NAME}:${VERSION}"
                 sh '''
@@ -48,7 +35,6 @@ pipeline {
                 '''
             }
         }
-
 
         stage('Push to Registry') {
             steps {
@@ -61,6 +47,5 @@ pipeline {
                 }
             }
         }
-        
     }
 }
