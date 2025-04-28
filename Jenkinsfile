@@ -57,8 +57,9 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker tag ${IMAGE_NAME}:${VERSION} ${DOCKER_USER}/${IMAGE_NAME}:${VERSION}
-                        docker push ${DOCKER_USER}/${IMAGE_NAME}:${VERSION}
+                        docker tag ${IMAGE_NAME}:${VERSION} tnsmith/ai-code-review-consumer-report:test
+                        docker push tnsmith/ai-code-review-consumer-report:test
+                        docker rmi ${IMAGE_NAME}:${VERSION}
                     '''
                 }
             }
